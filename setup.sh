@@ -64,7 +64,7 @@ echo -e "${GREEN}✓ Argo CD installed and running in insecure HTTP mode on Node
 # Step 3: Deploy Git Server
 echo -e "\n${YELLOW}[4/7] Deploying in-cluster Git server in namespace 'git-system'...${NC}"
 kubectl apply -f "${SCRIPT_DIR}/manifests/git-server.yaml"
-kubectl wait --for=condition=available deployment/git-server -n git-system --timeout=180s
+kubectl wait --for=condition=available deployment/git-server -n git-system --timeout=300s
 echo -e "${GREEN}✓ Git server deployment is 1/1 Ready.${NC}"
 
 # Step 4: Seed Git Repository via port-forward
@@ -133,10 +133,10 @@ for i in {1..30}; do
 done
 
 echo "Waiting for 'redis-store' deployment (Wave 0) to be available..."
-kubectl wait --for=condition=available deployment/redis-store -n tenant-core --timeout=120s
+kubectl wait --for=condition=available deployment/redis-store -n tenant-core --timeout=300s
 
 echo "Waiting for 'edge-gateway' deployment (Wave 1) to be available..."
-kubectl wait --for=condition=available deployment/edge-gateway -n tenant-core --timeout=120s
+kubectl wait --for=condition=available deployment/edge-gateway -n tenant-core --timeout=300s
 
 echo "Waiting for Argo CD application to reach Synced and Healthy status..."
 for i in {1..30}; do
