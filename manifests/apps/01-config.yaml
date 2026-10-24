@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-runtime-config
+  namespace: tenant-core
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  LOG_LEVEL: "info"
+  REGION: "lagos-dc1"
+  GRID_STATUS: "isolated"

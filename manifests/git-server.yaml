@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: git-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: git-server
+  namespace: git-system
+  labels:
+    app: git-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: git-server
+  template:
+    metadata:
+      labels:
+        app: git-server
+    spec:
+      initContainers:
+      - name: init-git-repo
+        image: alpine/git:latest
+        command:
+        - sh
+        - -c
+        - |
+          mkdir -p /git/repo.git
+          if [ ! -f /git/repo.git/HEAD ]; then
+            git init --bare /git/repo.git
+            git --git-dir=/git/repo.git config receive.denyCurrentBranch ignore
+            git --git-dir=/git/repo.git symbolic-ref HEAD refs/heads/main
+          fi
+        volumeMounts:
+        - name: git-repo
+          mountPath: /git
+      containers:
+      - name: git-server
+        image: alpine/git:latest
+        command:
+        - git
+        - daemon
+        - --base-path=/git
+        - --export-all
+        - --enable=receive-pack
+        - --reuseaddr
+        - --informative-errors
+        - --verbose
+        ports:
+        - containerPort: 9418
+          name: git
+        volumeMounts:
+        - name: git-repo
+          mountPath: /git
+      volumes:
+      - name: git-repo
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: git-server
+  namespace: git-system
+spec:
+  selector:
+    app: git-server
+  ports:
+  - port: 9418
+    targetPort: 9418
+    name: git

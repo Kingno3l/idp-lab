@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-gateway
+  namespace: tenant-core
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app: edge-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: edge-gateway
+  template:
+    metadata:
+      labels:
+        app: edge-gateway
+    spec:
+      containers:
+      - name: gateway
+        image: nginx:1.25-alpine
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: platform-runtime-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-gateway
+  namespace: tenant-core
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app: edge-gateway
+spec:
+  selector:
+    app: edge-gateway
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
