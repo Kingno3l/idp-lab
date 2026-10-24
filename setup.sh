@@ -4,7 +4,6 @@ set -euo pipefail
 CLUSTER_NAME="idp-lab"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Define required images
 REQUIRED_IMAGES=(
   "quay.io/argoproj/argocd:v2.12.3"
   "redis:7.0-alpine"
@@ -63,10 +62,16 @@ kubectl apply -f "${SCRIPT_DIR}/manifests/git-server.yaml" >/dev/null
 kubectl rollout status deployment/git-server -n git-system --timeout=120s
 
 echo "[7/8] Seeding Git repository with Sync Wave manifests..."
-# Port-forward git-daemon locally in background to seed repository
 kubectl port-forward svc/git-server -n git-system 9418:9418 >/dev/null 2>&1 &
 PF_PID=$!
-sleep 2
+
+# Wait for port-forward to be responsive
+for i in {1..15}; do
+  if nc -z 127.0.0.1 9418 2>/dev/null || (exec 3<>/dev/tcp/127.0.0.1/9418) 2>/dev/null; then
+    break
+  fi
+  sleep 1
+done
 
 TMP_GIT=$(mktemp -d)
 (
@@ -78,8 +83,8 @@ TMP_GIT=$(mktemp -d)
   git config user.name "IDP Workshop"
   git add .
   git commit -m "feat: initial commit with sync waves" >/dev/null 2>&1
-  git remote add origin git://localhost:9418/repo.git
-  git push -u origin main >/dev/null 2>&1
+  git remote add origin git://127.0.0.1:9418/repo.git
+  git push -u origin main --force >/dev/null 2>&1
 )
 rm -rf "$TMP_GIT"
 kill "$PF_PID" 2>/dev/null || true
@@ -87,7 +92,6 @@ kill "$PF_PID" 2>/dev/null || true
 echo "[8/8] Applying Argo CD Application & Waiting for Sync..."
 kubectl apply -f "${SCRIPT_DIR}/manifests/argocd-app.yaml" >/dev/null
 
-# Await initial deployment synchronization
 echo "  - Waiting for tenant workloads to reconcile..."
 for i in {1..30}; do
   if kubectl get deployment edge-gateway -n tenant-core >/dev/null 2>&1; then
@@ -98,7 +102,6 @@ done
 kubectl rollout status deployment/redis-store -n tenant-core --timeout=120s
 kubectl rollout status deployment/edge-gateway -n tenant-core --timeout=120s
 
-# Retrieve initial admin password
 ADMIN_PASS=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
 
 echo ""
