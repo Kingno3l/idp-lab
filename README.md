@@ -41,7 +41,6 @@ cd idp-lab
 
 ### 2. Run the Setup Script
 ```bash
-chmod +x setup.sh tear-down.sh scripts/*.sh
 ./setup.sh
 ```
 
