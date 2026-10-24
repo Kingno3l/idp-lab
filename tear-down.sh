@@ -13,6 +13,7 @@ else
 fi
 
 # Clean up any lingering port-forward processes for the git server or argocd
-pkill -f "kubectl port-forward.*19418" 2>/dev/null || true
+pkill -f "kubectl port-forward.*9418" 2>/dev/null || true
+pkill -f "kubectl port-forward.*8080" 2>/dev/null || true
 
 echo "Teardown complete."

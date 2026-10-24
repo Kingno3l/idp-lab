@@ -3,6 +3,18 @@ kind: Namespace
 metadata:
   name: git-system
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: git-repo-pvc
+  namespace: git-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,7 +34,8 @@ spec:
     spec:
       initContainers:
       - name: init-git-repo
-        image: alpine/git:latest
+        image: idp-lab-git-server:latest
+        imagePullPolicy: IfNotPresent
         command:
         - sh
         - -c
@@ -38,7 +51,8 @@ spec:
           mountPath: /git
       containers:
       - name: git-server
-        image: alpine/git:latest
+        image: idp-lab-git-server:latest
+        imagePullPolicy: IfNotPresent
         command:
         - git
         - daemon
@@ -56,7 +70,8 @@ spec:
           mountPath: /git
       volumes:
       - name: git-repo
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: git-repo-pvc
 ---
 apiVersion: v1
 kind: Service

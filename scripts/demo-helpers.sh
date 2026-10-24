@@ -32,14 +32,14 @@ demo-restore-git() {
   echo "Waiting for git-server to become available..."
   kubectl wait --for=condition=available deployment/git-server -n git-system --timeout=60s
   # Ensure HEAD points to main
-  kubectl exec deployment/git-server -n git-system -- git --git-dir=/git/repo.git symbolic-ref HEAD refs/heads/main 2>/dev/null || true
+  kubectl exec deployment/git-server -n git-system -c git-server -- git --git-dir=/git/repo.git symbolic-ref HEAD refs/heads/main 2>/dev/null || true
   echo "Git server restored successfully."
 }
 
 demo-check-drift() {
   echo "=== [Demo] Checking Argo CD Drift & Sync Status ==="
   kubectl patch app wave-platform-stack -n argocd --type merge -p '{"metadata":{"annotations":{"argocd.argoproj.io/refresh":"hard"}}}' 2>/dev/null || true
-  sleep 3
+  sleep 4
   kubectl get app wave-platform-stack -n argocd
   echo ""
   echo "Current tenant-core workloads:"

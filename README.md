@@ -11,7 +11,7 @@ An automated local Kubernetes and GitOps laboratory simulating an enterprise Int
   - `443:443` (HTTPS Ingress)
   - `8080:30080` (Argo CD Web UI via NodePort)
 - **GitOps Engine**: [Argo CD v2.10](https://argo-cd.readthedocs.io/) running in `argocd` namespace in unencrypted HTTP mode for immediate browser access.
-- **In-Cluster Git Server**: An isolated `alpine/git` Git daemon running in `git-system` namespace serving `git://git-server.git-system.svc.cluster.local/repo.git`.
+- **In-Cluster Git Server**: An isolated Alpine-based Git daemon running in `git-system` namespace backed by persistent storage, serving `git://git-server.git-system.svc.cluster.local/repo.git`.
 - **Tenant Workloads (`tenant-core` namespace)** deployed across **Argo CD Sync Waves**:
   - **Wave -1**: `platform-runtime-config` (ConfigMap containing environment configuration)
   - **Wave 0**: `redis-store` (Redis 7.0 Deployment + ClusterIP Service)
